@@ -127,6 +127,7 @@ def exportar_cookies(message):
         return
 
     if formato == 'zip':
+        # Crear un archivo ZIP en memoria RAM
         memory_file = io.BytesIO()
         with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
             for idx, (nombre, contenido) in enumerate(resultados, 1):
@@ -141,6 +142,7 @@ def exportar_cookies(message):
         )
 
     elif formato == 'txt':
+        # Unir todas las cookies en un único archivo de texto plano
         texto_acumulado = ""
         for nombre, contenido in resultados:
             texto_acumulado += f"--- {nombre} ---\n{contenido}\n\n"
@@ -154,14 +156,17 @@ def exportar_cookies(message):
     else:
         bot.reply_to(message, "⚠️ Elige un formato válido. Usa:\n• `/exportar zip`\n• `/exportar txt`", parse_mode="Markdown")
 
-# --- WEBHOOK SEGURO PARA RENDER ---
+# --- WEBHOOK PARA RENDER ---
 
-@app.route(f'/{TOKEN}', methods=['POST'])
+@app.route('/webhook', methods=['POST'])
 def webhook():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return 'OK', 200
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return 'OK', 200
+    else:
+        return 'Invalid content type', 403
 
 @app.route('/', methods=['GET'])
 def index():
